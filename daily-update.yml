@@ -1,0 +1,33 @@
+name: Daily Sarkari Update
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Runs daily at 6 AM IST
+  workflow_dispatch:      # Manual trigger
+
+jobs:
+  update-site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 apify-client
+      
+      - name: Fetch new data
+        run: python scripts/fetch_updates.py
+      
+      - name: Update HTML
+        run: python scripts/update_site.py
+      
+      - name: Commit and Push
+        run: |
+          git config user.name "Auto Update Bot"
+          git config user.email "bot@example.com"
+          git add .
+          git commit -m "Auto-update: $(date +'%Y-%m-%d')"
+          git push
