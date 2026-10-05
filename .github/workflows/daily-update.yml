@@ -13,13 +13,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install deps
-        run: pip install requests beautifulsoup4 google-generativeai
+        run: pip install requests google-generativeai
 
       - name: Run updater
         env:
@@ -30,6 +32,7 @@ jobs:
         run: |
           git config user.name "Bot"
           git config user.email "bot@bot.com"
+          git pull --rebase origin main || true
           git add .
           git commit -m "Daily update $(date +%F)" || exit 0
           git push
