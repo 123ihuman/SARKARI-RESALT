@@ -1,10 +1,8 @@
-import os, json, re, requests
-from bs4 import BeautifulSoup
-from datetime import datetime
+import os, json, re
 import google.generativeai as genai
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-model = genai.GenerativeModel("gemini-2.0-flash")
+model = genai.GenerativeModel("gemini-3.8-flash")
 
 SOURCES = {
     "Latest Jobs":  "https://www.sarkariresult.com/latestjob.php",
@@ -13,40 +11,27 @@ SOURCES = {
     "Answer Keys":  "https://www.sarkariresult.com/answerkey/",
 }
 
-def fetch(url):
-    try:
-        r = requests.get(f"https://r.jina.ai/{url}", timeout=60)
-        print("Fetched", url, "len:", len(r.text))
-        return r.text
-    except Exception as e:
-        print("fetch fail", url, e)
-        return ""
-
-def extract(html, category):
-    if not html:
-        return []
-    soup = BeautifulSoup(html, "html.parser")
-    text = soup.get_text(" ", strip=True)[:6000]
-    prompt = f"""Extract job listings from this {category} page text.
-Return ONLY a JSON array. Each item: {{"title":"...","link":"...","date":"YYYY-MM-DD or empty"}}.
-Max 30 items. No explanation.
-
-TEXT:
-{text}"""
+def extract(url, category):
+    prompt = f"""Visit this URL: {url}
+Category: {category}
+Extract the top 20 latest entries as a JSON array.
+Each item must be: {{"title":"exact title","link":"full absolute URL","date":"YYYY-MM-DD or empty"}}
+Return ONLY the JSON array. No explanation, no markdown."""
     try:
         res = model.generate_content(prompt)
         m = re.search(r"\[.*\]", res.text, re.DOTALL)
-        return json.loads(m.group()) if m else []
+        if m:
+            return json.loads(m.group())
     except Exception as e:
         print("ai fail", e)
-        return []
+    return []
 
 def main():
     all_items = []
     for cat, url in SOURCES.items():
         print("Fetching", cat)
-        html = fetch(url)
-        items = extract(html, cat)
+        items = extract(url, cat)
+        print("  got", len(items), "items")
         for it in items:
             it["category"] = cat
         all_items.extend(items)
@@ -54,7 +39,9 @@ def main():
     os.makedirs("data", exist_ok=True)
     existing = []
     if os.path.exists("data/updates.json"):
-        existing = json.load(open("data/updates.json"))
+        try:
+            existing = json.load(open("data/updates.json"))
+        except: existing = []
 
     seen = {e.get("title","").lower() for e in existing}
     new = [i for i in all_items if i.get("title","").lower() not in seen]
