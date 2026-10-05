@@ -29,20 +29,21 @@ Return ONLY the JSON array. No explanation, no markdown."""
 def main():
     all_items = []
     for cat, url in SOURCES.items():
-    print("Fetching", cat)
-    items = extract(url, cat)
-    print("  got", len(items), "items")
-    for it in items:
-        it["category"] = cat
-    all_items.extend(items)
-    time.sleep(20)   # wait 20s to avoid free-tier rate limit
+        print("Fetching", cat)
+        items = extract(url, cat)
+        print("  got", len(items), "items")
+        for it in items:
+            it["category"] = cat
+        all_items.extend(items)
+        time.sleep(20)
 
     os.makedirs("data", exist_ok=True)
     existing = []
     if os.path.exists("data/updates.json"):
         try:
             existing = json.load(open("data/updates.json"))
-        except: existing = []
+        except:
+            existing = []
 
     seen = {e.get("title","").lower() for e in existing}
     new = [i for i in all_items if i.get("title","").lower() not in seen]
