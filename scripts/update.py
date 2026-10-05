@@ -15,7 +15,8 @@ SOURCES = {
 
 def fetch(url):
     try:
-        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=30)
+        r = requests.get(f"https://r.jina.ai/{url}", timeout=60)
+        print("Fetched", url, "len:", len(r.text))
         return r.text
     except Exception as e:
         print("fetch fail", url, e)
