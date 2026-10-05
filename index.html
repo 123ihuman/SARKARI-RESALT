@@ -533,6 +533,7 @@
     </div>
 
     <div class="home-container">
+        <div id="auto-updates"></div>
 
         <div class="tools-title">🔥 Active Recruitments – September 2026</div>
         <div class="tools-grid">
@@ -10692,7 +10693,41 @@
 
     console.log('✅ Website fully loaded. All data and functionality ready.');
 </script>
+<script>
+fetch('data/updates.json?v=' + Date.now())
+  .then(r => r.json())
+  .then(data => {
+    const cats = {
+      'Latest Jobs': '🔥 Latest Jobs',
+      'Results': '📊 Results',
+      'Admit Cards': '🎫 Admit Cards',
+      'Answer Keys': '✅ Answer Keys'
+    };
+    const grouped = {};
+    data.forEach(item => {
+      const c = item.category || 'Latest Jobs';
+      if (!grouped[c]) grouped[c] = [];
+      grouped[c].push(item);
+    });
 
+    let html = '';
+    for (const key in cats) {
+      if (!grouped[key]) continue;
+      html += '<div class="box" style="margin-bottom:20px;">';
+      html += '<div class="box-header">' + cats[key] + '</div>';
+      html += '<div class="box-content"><ul>';
+      grouped[key].slice(0, 20).forEach(item => {
+        const t = (item.title || '').replace(/</g,'&lt;');
+        const u = item.link || '#';
+        html += '<li><a href="' + u + '" target="_blank">' + t + '</a></li>';
+      });
+      html += '</ul></div></div>';
+    }
+
+    document.getElementById('auto-updates').innerHTML = html || '';
+  })
+  .catch(() => {});
+</script>
 </body>
 </html>
 
