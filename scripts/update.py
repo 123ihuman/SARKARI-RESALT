@@ -1,4 +1,4 @@
-import os, json, re
+import os, json, re, time
 import google.generativeai as genai
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
@@ -29,12 +29,13 @@ Return ONLY the JSON array. No explanation, no markdown."""
 def main():
     all_items = []
     for cat, url in SOURCES.items():
-        print("Fetching", cat)
-        items = extract(url, cat)
-        print("  got", len(items), "items")
-        for it in items:
-            it["category"] = cat
-        all_items.extend(items)
+    print("Fetching", cat)
+    items = extract(url, cat)
+    print("  got", len(items), "items")
+    for it in items:
+        it["category"] = cat
+    all_items.extend(items)
+    time.sleep(20)   # wait 20s to avoid free-tier rate limit
 
     os.makedirs("data", exist_ok=True)
     existing = []
